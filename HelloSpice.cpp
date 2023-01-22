@@ -59,15 +59,17 @@ struct State
     Velocity vel;
 };
 
-auto compute_relative_position(std::string obj_1, std::string obj_2) -> State
+auto compute_relative_position(std::string obj_1, std::string obj_2, std::string epoch="2006 JAN 31 01:00", std::string frame="J2000") -> State
 {
     State state = {};
 
     SpiceDouble   et;
     SpiceDouble   s[6];
+    SpiceDouble   s1[6];
     SpiceDouble   lt;
-    str2et_c ("2006 JAN 31 01:00", &et );
-    spkezr_c (obj_1.c_str(), et, "J2000", "NONE", obj_2.c_str(), s, &lt);
+    str2et_c (epoch.c_str(), &et );
+    spkezr_c (obj_1.c_str(), et, frame.c_str(), "NONE", obj_2.c_str(), s, &lt);
+
     state.pos.x = s[0];
     state.pos.y = s[1];
     state.pos.z = s[2];
@@ -82,6 +84,10 @@ auto main () -> int
     SpiceInt count;
     std::string kernel_de440s = "kernels/de440.bsp";
     std::string kernel_naif0012 = "kernels/naif0012.tls";
+    std::string epoch = "2006 JAN 31 01:00";
+    std::string frame_J2000 = "J2000";
+    std::string frame_ECLIPJ2000 = "ECLIPJ2000";
+    std::string frame_IAU_SUN = "IAU_SUN";
     
     auto obj_ids = get_obj_ids_from_kernel(kernel_de440s);
 
@@ -95,7 +101,15 @@ auto main () -> int
     furnsh_c(kernel_naif0012.c_str());
     furnsh_c(kernel_de440s.c_str());
 
-    auto state = compute_relative_position("SUN", "EARTH");
+    // compute state
+    auto state0  = compute_relative_position("SUN", "EARTH", epoch, frame_IAU_SUN);
+    auto state1 = compute_relative_position("SUN", "MERCURY BARYCENTER", epoch, frame_IAU_SUN);
+
+    auto state2  = compute_relative_position("SUN", "MARS BARYCENTER", epoch,frame_IAU_SUN);
+    auto state3 = compute_relative_position("SUN", "MERCURY BARYCENTER", epoch, frame_ECLIPJ2000);
+
+    
+
 
     ktotal_c ( "ALL", &count );
     
